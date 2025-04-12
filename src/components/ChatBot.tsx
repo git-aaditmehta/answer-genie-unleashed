@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, X, Maximize2, Minimize2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ interface Message {
   timestamp: Date;
 }
 
-type LanguageCode = "en" | "hi" | "es" | "fr" | "ar";
+type LanguageCode = "en" | "hi" | "mr" | "gu" | "es" | "fr" | "ar";
 
 // Translations for key messages
 const translations: Record<LanguageCode, Record<string, string>> = {
@@ -43,6 +42,26 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     typing: "टाइप कर रहा है...",
     selectLanguage: "भाषा चुनें",
     assistantTitle: "AnswerGenie सहायक"
+  },
+  mr: {
+    welcome: "नमस्कार! मी AnswerGenie आहे, तुमचा वैद्यकीय सहाय्यक. आज मी तुम्हाला कशी मदत करू शकतो?",
+    inputPlaceholder: "तुमचा संदेश टाइप करा...",
+    emergency: "आपत्कालीन सेवांची विनंती करण्यासाठी, कृपया मुख्य स्क्रीनवरील लाल EMERGENCY बटन दाबा. हे आमच्या प्रणालीला तुमच्या स्थानावर मदत पाठवण्यासाठी त्वरीत सूचित करेल.",
+    ambulance: "रुग्णवाहिका हवी आहे? मुख्यपृष्ठावरील लाल EMERGENCY बटन दाबा. आमची प्रणाली तुमच्या स्थानाजवळील उपलब्ध रुग्णवाहिका पाठवेल.",
+    hospital: "रुग्णालयाची माहिती शोधत आहात? आपण जवळील वैद्यकीय सुविधा पाहण्यासाठी नेव्हिगेशन बारमध्ये 'Find Hospitals' वर क्लिक करू शकता.",
+    typing: "टाइप करत आहे...",
+    selectLanguage: "भाषा निवडा",
+    assistantTitle: "AnswerGenie सहाय्यक"
+  },
+  gu: {
+    welcome: "નમસ્તે! હું AnswerGenie છું, તમારો મેડિકલ સહાયક. આજે હું તમને કેવી રીતે મદદ કરી શકું?",
+    inputPlaceholder: "તમારો સંદેશ ટાઇપ કરો...",
+    emergency: "ઇમરજન્સી સેવાઓની વિનંતી કરવા માટે, કૃપા કરીને મુખ્ય સ્ક્રીન પર લાલ EMERGENCY બટન દબાવો. આ તરત જ અમારી સિસ્ટમને તમારા સ્થાન પર મદદ મોકલવા માટે સતર્ક કરશે.",
+    ambulance: "એમ્બ્યુલન્સની જરૂર છે? હોમ પેજ પર લાલ EMERGENCY બટન દબાવો. અમારી સિસ્ટમ તમારા સ્થાન પર નજીકની ઉપલબ્ધ એમ્બ્યુલન્સ મોકલશે.",
+    hospital: "હોસ્પિટલની માહિતી શોધી રહ્યા છો? નજીકની મેડિકલ સુવિધાઓ જોવા માટે તમે નેવિગેશન બારમાં 'Find Hospitals' પર ક્લિક કરી શકો છો.",
+    typing: "ટાઇપ કરી રહ્યું છે...",
+    selectLanguage: "ભાષા પસંદ કરો",
+    assistantTitle: "AnswerGenie સહાયક"
   },
   es: {
     welcome: "¡Hola! Soy AnswerGenie, tu asistente médico. ¿Cómo puedo ayudarte hoy?",
@@ -100,6 +119,28 @@ const EMERGENCY_RESPONSES: Record<LanguageCode, Record<string, string>> = {
     "accident": "दुर्घटना आपात स्थिति के लिए, तुरंत EMERGENCY बटन दबाएं। अगर ऐसा करना सुरक्षित है, तो पेशेवर सहायता आने तक घायल व्यक्तियों को हिलाने-डुलाने की कोशिश न करें।",
     "help": "चिकित्सा आपात स्थिति के लिए, मुख्य स्क्रीन पर लाल EMERGENCY बटन दबाएं। अस्पतालों के बारे में जानकारी के लिए, नेविगेशन मेनू में 'Find Hospitals' पर क्लिक करें।",
   },
+  mr: {
+    "emergency": "आपत्कालीन सेवांची विनंती करण्यासाठी, कृपया मुख्य स्क्रीनवरील लाल EMERGENCY बटन दाबा. हे आमच्या प���रणालीला तुमच्या स्थानावर मदत पाठवण्यासाठी त्वरीत सूचित करेल.",
+    "ambulance": "रुग्णवाहिका हवी आहे? मुख्यपृष्ठावरील लाल EMERGENCY बटन दाबा. आमची प्रणाली तुमच्या स्थानाजवळील उपलब्ध रुग्णवाहिका पाठवेल.",
+    "hospital": "रुग्णालयाची माहिती शोधत आहात? आपण जवळील वैद्यकीय सुविधा पाहण्यासाठी नेव्हिगेशन बारमध्ये 'Find Hospitals' वर क्लिक करू शकता.",
+    "chest pain": "छातीतील वेदना गंभीर असू शकते. कृपया त्वरित EMERGENCY बटन दाबा. वाट पाहताना: 1) बसा आणि आराम करा 2) जर उपलब्ध असेल आणि अॅलर्जी नसेल तર अॅस्पिरिन घ्या 3) कपडे सैल करा.",
+    "stroke": "तुम्हाला स्ट्रોકची शંકा असल्यास, FAST लક्षात ठेवा: चेहरा लोंबकळणे, बाहू कमजोरी, बोलण्यात अडचण, आपत्कालीन सेवांना कॉल करण्याची वेळ. आता EMERGENCY बटन दाबा.",
+    "bleeding": "गंभीर रक्तસ્રાવासाठी: 1) ઘા પર સીધો દબાણ લાગુ કરો 2) શક્ય અसल्यास સ્વચ્છ કાપડ વापરा 3) વ્યાવસાયિક મદદ માટે તરત જ EMERGENCY બટન દબાવો.",
+    "heartattack": "હૃદયવિકારના લક્ષણો અનુભવત अસल्यास, આતा EMERGENCY બટન દબાવો. બસा किंवा ઝોપा, કપડे सैલ कરा, અને મદદ આવે ત્યાં શાંત રહેવાનો પ્રયાસ કરો.",
+    "accident": "अपaghात આપત૕ालीन पરिस्थितीसाठी, તત्काळ EMERGENCY બટન દબાવો. જર તसे कરणे सુરક્ષિત असेल तર, વ્યાવસાયિક મદદ આવે ત્યાં સુધી ઘાયલ વ્યક્તિઓને ખસેડવાનો પ્રયાસ ન કરો.",
+    "help": "वैद्यकीय આપત૕ालीन परिस्थितीसाठी, મુખ્ય સ્ક્રીનવરील लाल EMERGENCY બટન દબાવો. હોસ્પિટલો વિશે માહિતીસाठी, નેવિગેશન મેનૂમાં 'Find Hospitals' પર ક્લિક કરा.",
+  },
+  gu: {
+    "emergency": "ઇમરજન્સી સેવાઓની વિનંતી કરવા માટે, કૃપા કરીને મુખ્ય સ્ક્રીન પર લાલ EMERGENCY બટન દબાવો. આ તરત જ અમારી સિસ્ટમને તમારા સ્થાન પર મદદ મોકલવા માટે સતર્ક કરશે.",
+    "ambulance": "એમ્બ્યુલન્સની જરૂર છે? હોમ પેજ પર લાલ EMERGENCY બટન દબાવો. અમારી સિસ્ટમ તમારા સ્થાન પર નજીકની ઉપલબ્ધ એમ્બ્યુલન્સ મોકલશે.",
+    "hospital": "હોસ્પિટલની માહિતી શોધી રહ્યા છો? નજીકની મેડિકલ સુવિધાઓ જોવા માટે તમે નેવિગેશન બારમાં 'Find Hospitals' પર ક્લિક કરી શકો છો.",
+    "chest pain": "છાતીમાં દુખાવો ગંભીર હોઈ શકે છે. કૃપા કરીને તરત જ EMERGENCY બટન દબાવો. રાહ જોતી વખતે: 1) બેસો અને આરામ કરો 2) જો ઉપલब્ધ હોય અને એલર્જી ન હોય તો એસ્પિરિન લો 3) ચુસ્ત કપડાં ઢીલા કરો.",
+    "stroke": "જો તમને સ્ટ્રોકની શંકા હોય, તો FAST યાદ રાખો: ચહેરો લટકવો, હાથમાં નબળાઈ, બોલવામાં તકલીફ, ઇમરજન્સી સેવાઓને કૉલ કરવાનો સમય. હવે EMERGENCY બટન દબાવો.",
+    "bleeding": "ગંભીર રક્તસ્રાવ માટે: 1) ઘા પર સીધો દબાણ લાગુ કરો 2) શક્ય હોય તો સ્વચ્છ કપડાનો ઉપયોગ કરો 3) વ્યાવસાયિક મદદ માટે તરત જ EMERGENCY બટન દબાવો.",
+    "heartattack": "જો હૃદય રોગના લક્ષણો અનુભવી રહ્યા છો, તો હવે EMERGENCY બટન દબાવો. બેસો અથવા સૂઈ જાઓ, ચુસ્ત કપડાં ઢીલા કરો, અને મદદ આવે ત્યાં સુધી શાંત રહેવાનો પ્રયાસ કરો.",
+    "accident": "અકસ્માતની કટોકટી માટે, તરત જ EMERGENCY બટન દબાવો. જર તसे कરणे સુરક્ષિત અसે હોય, તો વ્યાવસાયિક મદદ આવે ત્યાં સુધી ઘાયલ વ્યક્તિઓને ખસેડવાનો પ્રયાસ ન કરો.",
+    "help": "તબીબી કટોકટી માટે, મુખ્ય સ્ક્રીન પર લાલ EMERGENCY બટન દબાવો. હોસ્પિટલો વિશે માહિતી માટે, નેવિગેશન મેનૂમાં 'Find Hospitals' પર ક્લિક કરો.",
+  },
   es: {
     "emergency": "Para solicitar servicios de emergencia, presiona el botón rojo EMERGENCY en la pantalla principal. Esto alertará inmediatamente a nuestro sistema para enviar ayuda a tu ubicación.",
     "ambulance": "¿Necesitas una ambulancia? Presiona el botón rojo EMERGENCY en la página principal. Nuestro sistema enviará la ambulancia disponible más cercana a tu ubicación.",
@@ -116,7 +157,7 @@ const EMERGENCY_RESPONSES: Record<LanguageCode, Record<string, string>> = {
     "ambulance": "Besoin d'une ambulance? Appuyez sur le bouton rouge EMERGENCY sur la page d'accueil. Notre système enverra l'ambulance disponible la plus proche à votre emplacement.",
     "hospital": "Vous cherchez des informations sur les hôpitaux? Vous pouvez cliquer sur 'Find Hospitals' dans la barre de navigation pour voir les établissements médicaux à proximité.",
     "chest pain": "La douleur thoracique peut être grave. Veuillez appuyer immédiatement sur le bouton EMERGENCY. En attendant: 1) Asseyez-vous et reposez-vous 2) Prenez de l'aspirine si disponible et non allergique 3) Desserrez les vêtements serrés.",
-    "stroke": "Si vous soupçonnez un AVC, souvenez-vous de VITE: Visage tombant, Inaptitude des bras, Trouble de la parole, Extrême urgence d'appeler les services d'urgence. Appuyez maintenant sur le bouton EMERGENCY.",
+    "stroke": "Si vous soupçonnez de un AVC, souvenez-vous de VITE: Visage tombant, Inaptitude des bras, Trouble de la parole, Extrême urgence d'appeler les services d'urgence. Appuyez maintenant sur le bouton EMERGENCY.",
     "bleeding": "Pour les saignements graves: 1) Appliquez une pression directe sur la plaie 2) Utilisez un chiffon propre si possible 3) Appuyez immédiatement sur le bouton EMERGENCY pour une aide professionnelle.",
     "heartattack": "Si vous ressentez des symptômes de crise cardiaque, appuyez maintenant sur le bouton EMERGENCY. Asseyez-vous ou allongez-vous, desserrez les vêtements serrés et essayez de rester calme jusqu'à l'arrivée des secours.",
     "accident": "Pour les urgences liées aux accidents, appuyez immédiatement sur le bouton EMERGENCY. Si cela est sûr, essayez de ne pas déplacer les personnes blessées jusqu'à l'arrivée d'une aide professionnelle.",
@@ -152,6 +193,22 @@ const INITIAL_MESSAGES: Record<LanguageCode, Message[]> = {
       timestamp: new Date(),
     },
   ],
+  mr: [
+    {
+      id: 1,
+      text: translations.mr.welcome,
+      isBot: true,
+      timestamp: new Date(),
+    },
+  ],
+  gu: [
+    {
+      id: 1,
+      text: translations.gu.welcome,
+      isBot: true,
+      timestamp: new Date(),
+    },
+  ],
   es: [
     {
       id: 1,
@@ -182,6 +239,8 @@ const INITIAL_MESSAGES: Record<LanguageCode, Message[]> = {
 const languageNames: Record<LanguageCode, string> = {
   en: "English",
   hi: "हिन्दी",
+  mr: "मराठी",
+  gu: "ગુજરાતી",
   es: "Español",
   fr: "Français",
   ar: "العربية"
@@ -288,7 +347,7 @@ const ChatBot = () => {
         ? "¡De nada! Estoy aquí para ayudarte con cualquier pregunta médica o emergencia."
         : lang === "fr"
         ? "Je vous en prie! Je suis là pour vous aider avec toutes questions médicales ou urgences."
-        : "على الرحب والسعة! أنا هنا للمساعدة في أي أسئلة طبية أو حالات طوارئ.";
+        : "على الرحب وا��سعة! أنا هنا للمساعدة في أي أسئلة طبية أو حالات طوارئ.";
     } else if (query.includes("hello") || query.includes("hi")) {
       return lang === "en"
         ? "Hello! I'm here to assist you with medical information and emergency guidance. How can I help you today?"

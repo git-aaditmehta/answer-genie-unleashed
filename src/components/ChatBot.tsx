@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import VoiceControl from "./VoiceControl";
+import TextToSpeech from "./TextToSpeech";
 
 interface Message {
   id: number;
@@ -164,7 +166,9 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES[language]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const latestBotMessage = useRef<string>("");
 
   // Handle opening the chatbot after a short delay for better UX
   useEffect(() => {
@@ -177,6 +181,12 @@ const ChatBot = () => {
   // Auto-scroll to the bottom when new messages arrive
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    
+    // Store the latest bot message for potential text-to-speech
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.isBot) {
+      latestBotMessage.current = lastMessage.text;
+    }
   }, [messages]);
 
   // Update messages when language changes
@@ -218,6 +228,40 @@ const ChatBot = () => {
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
     }, 1000);
+  };
+
+  const handleSpeechResult = (text: string) => {
+    setInput(text);
+    // Automatically send the message after voice input
+    setTimeout(() => {
+      if (text.trim()) {
+        const userMessage: Message = {
+          id: messages.length + 1,
+          text,
+          isBot: false,
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
+        setIsTyping(true);
+
+        // Simulate bot thinking
+        setTimeout(() => {
+          const botResponse = generateResponse(text.toLowerCase(), language);
+          
+          const botMessage: Message = {
+            id: messages.length + 2,
+            text: botResponse,
+            isBot: true,
+            timestamp: new Date(),
+          };
+          
+          setMessages((prev) => [...prev, botMessage]);
+          setIsTyping(false);
+        }, 1000);
+      }
+    }, 300);
   };
 
   const generateResponse = (query: string, lang: LanguageCode): string => {
@@ -380,6 +424,11 @@ const ChatBot = () => {
                           <User className="h-4 w-4 mt-0.5 text-white shrink-0" />
                         )}
                       </div>
+                      {message.isBot && (
+                        <div className="mt-2 flex justify-end">
+                          <TextToSpeech text={message.text} language={language} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -414,11 +463,18 @@ const ChatBot = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   className="flex-1"
+                  disabled={isListening}
+                />
+                <VoiceControl 
+                  onSpeechResult={handleSpeechResult}
+                  language={language}
+                  isListening={isListening}
+                  setIsListening={setIsListening}
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  disabled={!input.trim() || isTyping}
+                  disabled={!input.trim() || isTyping || isListening}
                   className="bg-ambulance-blue hover:bg-ambulance-lightBlue"
                 >
                   <Send className="h-4 w-4" />

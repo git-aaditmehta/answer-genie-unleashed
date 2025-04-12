@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface VoiceControlProps {
   onSpeechResult: (text: string) => void;
@@ -17,6 +17,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
   setIsListening,
 }) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const { toast } = useToast();
 
   // Map language codes to SpeechRecognition language codes
   const getRecognitionLanguage = (lang: string): string => {
@@ -29,13 +30,22 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
     return langMap[lang] || 'en-US';
   };
 
-  useEffect(() => {
-    // Initialize speech recognition
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+  const initializeRecognition = () => {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      toast({
+        title: "Speech Recognition not supported",
+        description: "Your browser does not support speech recognition.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = getRecognitionLanguage(language);
       
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -46,19 +56,42 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
+        toast({
+          title: "Speech Recognition Error",
+          description: `Error: ${event.error}`,
+          variant: "destructive",
+        });
       };
       
       recognitionRef.current.onend = () => {
         setIsListening(false);
       };
-    }
 
+      return true;
+    } catch (error) {
+      console.error('Failed to initialize speech recognition:', error);
+      toast({
+        title: "Initialization Error",
+        description: "Failed to initialize speech recognition.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const initialized = initializeRecognition();
+    
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.abort();
+        try {
+          recognitionRef.current.abort();
+        } catch (error) {
+          console.error('Error cleaning up speech recognition:', error);
+        }
       }
     };
-  }, [onSpeechResult, setIsListening]);
+  }, []);
 
   useEffect(() => {
     if (recognitionRef.current) {
@@ -68,19 +101,33 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser.');
-      return;
+      const initialized = initializeRecognition();
+      if (!initialized) return;
     }
 
     if (isListening) {
-      recognitionRef.current.abort();
-      setIsListening(false);
+      try {
+        recognitionRef.current?.abort();
+        setIsListening(false);
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+        toast({
+          title: "Error",
+          description: "Failed to stop speech recognition.",
+          variant: "destructive",
+        });
+      }
     } else {
       try {
-        recognitionRef.current.start();
+        recognitionRef.current?.start();
         setIsListening(true);
       } catch (error) {
         console.error('Failed to start speech recognition:', error);
+        toast({
+          title: "Error",
+          description: "Failed to start speech recognition. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +10,27 @@ interface TextToSpeechProps {
 
 const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, language }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const { toast } = useToast();
   const synth = window.speechSynthesis;
 
-  // Cancel any ongoing speech when component unmounts
+  // Load voices when component mounts
   useEffect(() => {
+    const loadVoices = () => {
+      const voices = synth.getVoices();
+      if (voices.length > 0) {
+        setVoicesLoaded(true);
+      }
+    };
+
+    // Load voices immediately if they're already available
+    loadVoices();
+
+    // Add event listener for when voices are loaded
+    synth.addEventListener('voiceschanged', loadVoices);
+
     return () => {
+      synth.removeEventListener('voiceschanged', loadVoices);
       if (synth.speaking) {
         synth.cancel();
       }
@@ -25,6 +39,10 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, language }) => {
 
   const getVoiceForLanguage = (lang: string) => {
     const voices = synth.getVoices();
+    if (!voices || voices.length === 0) {
+      return null;
+    }
+
     const langCodes: Record<string, string[]> = {
       'en': ['en', 'en-US', 'en-GB'],
       'hi': ['hi', 'hi-IN'],
@@ -60,28 +78,39 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, language }) => {
       return;
     }
 
+    if (!voicesLoaded) {
+      toast({
+        title: "Voices not loaded",
+        description: "Please wait while voices are being loaded.",
+        variant: "default",
+      });
+      return;
+    }
+
     if (text) {
       const utterance = new SpeechSynthesisUtterance(text);
+      const voice = getVoiceForLanguage(language);
       
-      // Wait for voices to be loaded
-      const voices = synth.getVoices();
-      if (voices.length === 0) {
-        // If voices aren't loaded yet, try again after a short delay
-        setTimeout(() => speak(), 200);
+      if (!voice) {
+        toast({
+          title: "No voice available",
+          description: "No suitable voice was found for the selected language.",
+          variant: "destructive",
+        });
         return;
       }
       
-      utterance.voice = getVoiceForLanguage(language);
+      utterance.voice = voice;
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => {
+      utterance.onerror = (event) => {
         setIsSpeaking(false);
         toast({
           title: "Speech Error",
-          description: "There was an error while speaking the text.",
+          description: `There was an error while speaking the text: ${event.error}`,
           variant: "destructive",
         });
       };
@@ -97,6 +126,7 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, language }) => {
       variant="outline"
       className="rounded-full"
       title={isSpeaking ? "Stop speaking" : "Speak this message"}
+      disabled={!voicesLoaded}
     >
       {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
     </Button>
